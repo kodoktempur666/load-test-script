@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package checkout;
+
+service CheckoutService {
+
+  rpc CreateCheckout (CreateCheckoutRequest)
+  returns (CheckoutResponse);
+
+  rpc GetCheckout (Empty)
+  returns (CheckoutData);
+
+  rpc EditCheckout (EditCheckoutRequest)
+  returns (CheckoutData);
+
+}
+
+message CreateCheckoutRequest {
+  string name = 1;
+  int32 amount = 2;
+  string item = 3;
+}
+
+message EditCheckoutRequest {
+  string name = 1;
+  int32 amount = 2;
+  string item = 3;
+}
+
+message CheckoutResponse {
+  string message = 1;
+  CheckoutData data = 2;
+}
+
+message CheckoutData {
+  int32 id = 1;
+  string name = 2;
+  int32 amount = 3;
+  string item = 4;
+}
+
+message Empty {}
