@@ -1,54 +1,35 @@
 import http from "k6/http";
-import { check } from "k6";
+import { check, sleep } from "k6";
 import {
   randomString,
   randomIntBetween,
 } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
-// const BASE_URL = 'http://localhost:3010/checkout';
-const BASE_URL = "http://178.128.110.193:3010/checkout";
-// const BASE_URL = 'http://202.10.41.230:3010/checkout';
+const HOST = __ENV.HOST || "18.139.14.134";
+const PORT = __ENV.PORT || "3010";
+const METHOD = (__ENV.METHOD || "POST").toUpperCase();
+
+const BASE_URL = `http://${HOST}:${PORT}/checkout`;
 
 export const options = {
   scenarios: {
-    checkout_load_test: {
-      executor: "ramping-vus",
-      startVUs: 0,
-      stages: [
-        { duration: "10s", target: 100 },
-        { duration: "10s", target: 200 },
-        { duration: "5s", target: 0 },
-      ],
-      gracefulRampDown: "5s",
+    high_concurrency_test: {
+      executor: "constant-arrival-rate",
+
+      rate: 500, // 🔥 500 request per second
+      timeUnit: "1s",
+      duration: "60s",
+
+      preAllocatedVUs: 200, // worker awal
+      maxVUs: 1000, // scaling maksimal
     },
   },
 
   thresholds: {
-    http_req_duration: ["p(50)<1000", "p(75)<1000", "p(90)<1000"],
-    http_req_failed: [],
+    http_req_duration: ["p(90)<2000"],
+    http_req_failed: ["rate<0.05"], // max 5% error
   },
 };
-
-function formatWIB(date) {
-  return date.toLocaleString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
-export function setup() {
-  const start = new Date();
-  const startWIB = formatWIB(start);
-
-  console.log(`Test started (WIB): ${startWIB}`);
-
-  return { start: start.toISOString() };
-}
 
 export default function () {
   const id = randomIntBetween(1, 10000);
@@ -56,61 +37,28 @@ export default function () {
   const payload = JSON.stringify({
     name: randomString(10),
     amount: randomIntBetween(100, 10000),
-    item: randomString(2),
+    item: randomString(5),
   });
 
-  const patchPayload = JSON.stringify({
-    name: randomString(10),
-  });
+  let res;
 
-  // POST
-  // const res = http.post(BASE_URL, payload, {
-  //   headers: {
-  //    "Content-Type": "application/json",
-  //   },
-  // });
+  if (METHOD === "POST") {
+    res = http.post(BASE_URL, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
 
-  // check(res, {
-  //   "POST status is 202": (r) => r.status === 202,
-  // });
+    check(res, {
+      "POST status 202": (r) => r.status === 202,
+    });
+  }
 
-  // GET
-  //   const getRes = http.get(`${BASE_URL}/${id}`);
+  if (METHOD === "GET") {
+    res = http.get(`${BASE_URL}/${id}`);
 
-  //  check(getRes, {
-  //   "GET status is 200": (r) => r.status === 200,
-  //  });
+    check(res, {
+      "GET status 200": (r) => r.status === 200,
+    });
+  }
 
-  // // PATCH
-  const editRes = http.patch(`${BASE_URL}/${id}`, patchPayload, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  check(editRes, {
-    "PATCH status is 200": (r) => r.status === 200,
-  });
-
-  // // PUT
-  // const putRes = http.put(`${BASE_URL}/${id}`, payload, {
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  // });
-
-  // check(putRes, {
-  //   "PUT status is 200": (r) => r.status === 200,
-  // });
-}
-
-export function teardown(data) {
-  const end = new Date();
-  const endWIB = formatWIB(end);
-
-  const start = new Date(data.start);
-  const duration = (end - start) / 1000;
-
-  console.log(`Test finished (WIB): ${endWIB}`);
-  console.log(`Total duration: ${duration} seconds`);
+  sleep(0.1); // kecilin biar lebih realistis
 }
