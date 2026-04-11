@@ -27,7 +27,7 @@ export const options = {
 
   thresholds: {
     http_req_duration: ["p(50)<1000", "p(75)<1000", "p(90)<1000"],
-    http_req_duration: ["p(90)<2000"], 
+    http_req_duration: ["p(90)<2000"],
     http_req_failed: ["rate<0.05"], // max 5% error
   },
 };
@@ -41,6 +41,10 @@ export default function () {
     item: randomString(5),
   });
 
+  const patchPayload = JSON.stringify({
+    name: randomString(10),
+  });
+
   let res;
 
   if (METHOD === "POST") {
@@ -49,17 +53,30 @@ export default function () {
     });
 
     check(res, {
-      "POST status 202": (r) => r.status === 202,
+      "POST status is 202": (r) => r.status === 202,
     });
-  }
-
-  if (METHOD === "GET") {
+  } else if (METHOD === "GET") {
     res = http.get(`${BASE_URL}/${id}`);
 
     check(res, {
-      "GET status 200": (r) => r.status === 200,
+      "GET status is 200": (r) => r.status === 200,
     });
-  }
+  } else if (METHOD === "PATCH") {
+    res = http.patch(`${BASE_URL}/${id}`, patchPayload, {
+      headers: { "Content-Type": "application/json" },
+    });
 
-  sleep(0.1); // kecilin biar lebih realistis
+    check(res, {
+      "PATCH status is 200": (r) => r.status === 200,
+    });
+  } else if (METHOD === "PUT") {
+    res = http.put(`${BASE_URL}/${id}`, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+    check(res, {
+      "PUT status is 200": (r) => r.status === 200,
+    });
+  } else {
+    console.error(`Method ${METHOD} tidak dikenali`);
+  }
 }
