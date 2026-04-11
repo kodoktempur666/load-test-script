@@ -16,12 +16,12 @@ export const options = {
     high_concurrency_test: {
       executor: "constant-arrival-rate",
 
-      rate: 500, // 🔥 500 request per second
+      rate: 500, 
       timeUnit: "1s",
       duration: "60s",
 
-      preAllocatedVUs: 200, // worker awal
-      maxVUs: 1000, // scaling maksimal
+      preAllocatedVUs: 200, 
+      maxVUs: 1000, 
     },
   },
 
