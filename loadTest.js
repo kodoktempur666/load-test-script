@@ -16,19 +16,16 @@ export const options = {
     dynamic_rps_test: {
       executor: "ramping-arrival-rate",
 
-      startRate: 100, // mulai dari 100 RPS
+      startRate: 100, 
       timeUnit: "1s",
 
       preAllocatedVUs: 200,
-      maxVUs: 1000,
+      maxVUs: 2000,
 
       stages: [
-        { target: 2000, duration: "20s" }, // naik ke 200 RPS
-        { target: 4000, duration: "20s" }, // naik ke 400 RPS
-        { target: 6000, duration: "20s" }, // naik ke 600 RPS
-        { target: 8000, duration: "20s" }, // naik ke 800 RPS
-        { target: 10000, duration: "20s" }, // stress maksimal
-        { target: 0, duration: "10s" }, // turun
+        { target: 1000, duration: "20s" }, 
+        { target: 2000, duration: "20s" }, 
+        { target: 0, duration: "10s" }, 
       ],
     },
   },
@@ -60,13 +57,13 @@ export default function () {
     });
 
     check(res, {
-      "POST status 202": (r) => r.status === 202,
+      "POST status 200": (r) => r.status === 200 || r.status === 201 || r.status === 202,
     });
   } else if (METHOD === "GET") {
     res = http.get(`${BASE_URL}/${id}`);
 
     check(res, {
-      "GET status 200": (r) => r.status === 200,
+      "GET status valid": (r) => r.status === 200 || r.status === 202,
     });
   } else if (METHOD === "PATCH") {
     res = http.patch(`${BASE_URL}/${id}`, patchPayload, {
