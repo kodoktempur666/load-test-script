@@ -1,5 +1,5 @@
 import http from "k6/http";
-import { check } from "k6";
+import { check, sleep } from "k6";
 import { SharedArray } from "k6/data";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
@@ -11,23 +11,14 @@ const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
-export function setup() {
-  const startTime = new Date().toISOString();
-  console.log(`TEST START: ${startTime}`);
-  return { startTime };
-}
-
 export const options = {
   scenarios: {
     checkout_load: {
       executor: "ramping-arrival-rate",
-
-      startRate: 5, // 🔽 mulai dari 20 req/s
+      startRate: 50,
       timeUnit: "1s",
-
       preAllocatedVUs: 200,
-      maxVUs: 300, // 🔽 turunin dikit biar lebih stabil
-
+      maxVUs: 1000,
       stages: [
         { target: 10, duration: "10s" },
         { target: 50, duration: "10s" },
@@ -36,7 +27,6 @@ export const options = {
       ],
     },
   },
-
   thresholds: {
     http_req_failed: ["rate<0.02"],
     http_req_duration: ["p(95)<1000"],
@@ -64,20 +54,17 @@ export default function () {
   if (loginOk && loginRes.body) {
     try {
       token = loginRes.json("data.token");
-    } catch (e) {
-      console.error("Login JSON parse error");
-    }
+    } catch (e) {}
   }
 
-  if (!token) {
-    console.warn(`Login failed: ${loginRes.status}`);
-    return;
-  }
+  if (!token) return;
 
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+
+  sleep(0.5); // 🔥 simulasi user pause
 
   // ================= CREATE CART =================
   const cartRes = http.post(`${BASE_URL}/api/carts`, null, { headers });
@@ -90,15 +77,31 @@ export default function () {
   if (cartOk && cartRes.body) {
     try {
       cartId = cartRes.json("data.cartId");
-    } catch (e) {
-      console.error("Cart JSON parse error");
-    }
+    } catch (e) {}
   }
 
-  if (!cartId) {
-    console.warn(`Cart failed: ${cartRes.status}`);
+  if (!cartId) return;
+
+  // ================= WAIT CART READY (IMPORTANT) =================
+  let cartReady = false;
+
+  for (let i = 0; i < 5; i++) {
+    const checkCart = http.get(`${BASE_URL}/api/carts/${cartId}`, { headers });
+
+    if (checkCart.status === 200) {
+      cartReady = true;
+      break;
+    }
+
+    sleep(0.5); // tunggu worker
+  }
+
+  if (!cartReady) {
+    console.warn(`Cart not ready: ${cartId}`);
     return;
   }
+
+  sleep(0.5); // delay user
 
   // ================= ADD ITEM =================
   const addItemRes = http.post(
@@ -114,10 +117,9 @@ export default function () {
     "item added": (r) => r && (r.status === 200 || r.status === 202),
   });
 
-  if (!addItemOk) {
-    console.warn(`Add item failed: ${addItemRes.status}`);
-    return;
-  }
+  if (!addItemOk) return;
+
+  sleep(0.5);
 
   // ================= CHECKOUT =================
   const checkoutRes = http.post(
@@ -134,15 +136,12 @@ export default function () {
   if (checkoutOk && checkoutRes.body) {
     try {
       orderId = checkoutRes.json("data.orderId");
-    } catch (e) {
-      console.error("Checkout JSON parse error");
-    }
+    } catch (e) {}
   }
 
-  if (!orderId) {
-    console.warn(`Checkout failed: ${checkoutRes.status}`);
-    return;
-  }
+  if (!orderId) return;
+
+  sleep(0.5);
 
   // ================= GET ORDER =================
   for (let i = 0; i < 3; i++) {
@@ -154,17 +153,7 @@ export default function () {
     check(orderRes, {
       "order fetched": (r) => r && r.status === 200,
     });
-  }
-}
 
-export function teardown(data) {
-  const endTime = new Date().toISOString();
-  console.log(`TEST END: ${endTime}`);
-
-  if (data && data.startTime) {
-    const duration =
-      new Date(endTime).getTime() - new Date(data.startTime).getTime();
-
-    console.log(`TOTAL DURATION: ${(duration / 1000).toFixed(2)} seconds`);
+    sleep(0.3); // delay antar polling
   }
 }
