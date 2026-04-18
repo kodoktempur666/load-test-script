@@ -8,7 +8,7 @@ const users = new SharedArray("users", function () {
   return JSON.parse(open("./users.json"));
 });
 
-const HOST = __ENV.HOST || "localhost";
+const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
