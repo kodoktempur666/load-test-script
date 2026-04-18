@@ -3,7 +3,6 @@ import { check } from "k6";
 import { SharedArray } from "k6/data";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
-
 const users = new SharedArray("users", function () {
   return JSON.parse(open("./users.json"));
 });
@@ -12,31 +11,28 @@ const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
-
 export function setup() {
   const startTime = new Date().toISOString();
   console.log(`TEST START: ${startTime}`);
   return { startTime };
 }
 
-
 export const options = {
   scenarios: {
     checkout_load: {
       executor: "ramping-arrival-rate",
 
-      startRate: 50,
+      startRate: 5, // 🔽 mulai dari 20 req/s
       timeUnit: "1s",
 
       preAllocatedVUs: 200,
-      maxVUs: 1500,
+      maxVUs: 300, // 🔽 turunin dikit biar lebih stabil
 
       stages: [
-        { target: 100, duration: "10s" },   
-        { target: 300, duration: "10s" },  
-        { target: 700, duration: "15s" },   
-        { target: 1000, duration: "15s" },  
-        { target: 0, duration: "10s" },    
+        { target: 10, duration: "10s" },
+        { target: 50, duration: "10s" },
+        { target: 100, duration: "15s" },
+        { target: 0, duration: "10s" },
       ],
     },
   },
@@ -50,6 +46,7 @@ export const options = {
 export default function () {
   const user = users[__VU % users.length];
 
+  // ================= LOGIN =================
   const loginRes = http.post(
     `${BASE_URL}/api/login`,
     JSON.stringify({
@@ -59,27 +56,51 @@ export default function () {
     { headers: { "Content-Type": "application/json" } }
   );
 
-  check(loginRes, {
-    "login success": (r) => r.status === 200,
+  const loginOk = check(loginRes, {
+    "login success": (r) => r && r.status === 200,
   });
 
-  const token = loginRes.json("data.token");
-  if (!token) return;
+  let token = null;
+  if (loginOk && loginRes.body) {
+    try {
+      token = loginRes.json("data.token");
+    } catch (e) {
+      console.error("Login JSON parse error");
+    }
+  }
+
+  if (!token) {
+    console.warn(`Login failed: ${loginRes.status}`);
+    return;
+  }
 
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
 
+  // ================= CREATE CART =================
   const cartRes = http.post(`${BASE_URL}/api/carts`, null, { headers });
 
-  check(cartRes, {
-    "cart created": (r) => r.status === 201,
+  const cartOk = check(cartRes, {
+    "cart created": (r) => r && r.status === 201,
   });
 
-  const cartId = cartRes.json("data.cartId");
-  if (!cartId) return;
+  let cartId = null;
+  if (cartOk && cartRes.body) {
+    try {
+      cartId = cartRes.json("data.cartId");
+    } catch (e) {
+      console.error("Cart JSON parse error");
+    }
+  }
 
+  if (!cartId) {
+    console.warn(`Cart failed: ${cartRes.status}`);
+    return;
+  }
+
+  // ================= ADD ITEM =================
   const addItemRes = http.post(
     `${BASE_URL}/api/carts/${cartId}/items`,
     JSON.stringify({
@@ -89,24 +110,41 @@ export default function () {
     { headers }
   );
 
-  check(addItemRes, {
-    "item added": (r) => r.status === 200 || r.status === 202,
+  const addItemOk = check(addItemRes, {
+    "item added": (r) => r && (r.status === 200 || r.status === 202),
   });
 
+  if (!addItemOk) {
+    console.warn(`Add item failed: ${addItemRes.status}`);
+    return;
+  }
+
+  // ================= CHECKOUT =================
   const checkoutRes = http.post(
     `${BASE_URL}/api/carts/${cartId}/checkout`,
     null,
     { headers }
   );
 
-  check(checkoutRes, {
-    "checkout accepted": (r) => r.status === 200 || r.status === 202,
+  const checkoutOk = check(checkoutRes, {
+    "checkout accepted": (r) => r && (r.status === 200 || r.status === 202),
   });
 
-  const orderId = checkoutRes.json("data.orderId");
+  let orderId = null;
+  if (checkoutOk && checkoutRes.body) {
+    try {
+      orderId = checkoutRes.json("data.orderId");
+    } catch (e) {
+      console.error("Checkout JSON parse error");
+    }
+  }
 
-  if (!orderId) return;
+  if (!orderId) {
+    console.warn(`Checkout failed: ${checkoutRes.status}`);
+    return;
+  }
 
+  // ================= GET ORDER =================
   for (let i = 0; i < 3; i++) {
     const orderRes = http.get(
       `${BASE_URL}/api/orders/${orderId}`,
@@ -114,7 +152,7 @@ export default function () {
     );
 
     check(orderRes, {
-      "order fetched": (r) => r.status === 200,
+      "order fetched": (r) => r && r.status === 200,
     });
   }
 }

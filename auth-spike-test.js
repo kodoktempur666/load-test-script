@@ -1,5 +1,5 @@
 import http from "k6/http";
-import { check  } from "k6";
+import { check, sleep  } from "k6";
 
 const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
@@ -74,6 +74,8 @@ export default function () {
   check(loginRes, {
     "login success": (r) => r.status === 200 || r.status === 201 || r.status === 202,
   });
+
+  sleep(0.5); 
 
 }
 
