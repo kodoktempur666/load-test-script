@@ -27,7 +27,7 @@ export const options = {
         { target: 100, duration: "10s" },   
         { target: 300, duration: "10s" },  
         { target: 700, duration: "15s" },   
-        { target: 1200, duration: "15s" },  
+        { target: 1000, duration: "15s" },  
         { target: 0, duration: "10s" },    
       ],
     },
