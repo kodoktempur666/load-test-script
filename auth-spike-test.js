@@ -60,6 +60,8 @@ export default function () {
     "register success": (r) => r.status === 201 || r.status === 200 || r.status === 202,
   });
 
+  sleep(2)
+
   const loginRes = http.post(
     `${BASE_URL}/api/login`,
     JSON.stringify({
