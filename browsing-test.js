@@ -6,6 +6,14 @@ const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
+
+export function setup() {
+  const startTime = new Date().toISOString();
+  console.log(`TEST START: ${startTime}`);
+  return { startTime };
+}
+
+
 export const options = {
   scenarios: {
     browsing_load: {
@@ -18,43 +26,54 @@ export const options = {
       maxVUs: 2000,
 
       stages: [
-        { target: 300, duration: "10s" },   // warmup
-        { target: 800, duration: "15s" },   // normal browsing
-        { target: 1500, duration: "20s" },  // high traffic
-        { target: 2500, duration: "20s" },  // peak (homepage hit)
-        { target: 0, duration: "10s" },     // cooldown
+        { target: 300, duration: "10s" },   
+        { target: 800, duration: "15s" },  
+        { target: 1500, duration: "20s" },  
+        { target: 2500, duration: "20s" }, 
+        { target: 0, duration: "10s" },     
       ],
     },
   },
 
   thresholds: {
     http_req_failed: ["rate<0.01"],
-    http_req_duration: ["p(95)<500"], // harus cepat (read-only)
+    http_req_duration: ["p(95)<500"], 
   },
 };
 
 export default function () {
-  // 🔥 1. GET PRODUCTS (list)
+
   const productsRes = http.get(`${BASE_URL}/api/products`);
 
   check(productsRes, {
     "products fetched": (r) => r.status === 200,
   });
 
-  // 🔥 2. RANDOM PRODUCT DETAIL
-  const productId = randomIntBetween(1, 100); // sesuaikan range DB
+
+  const productId = randomIntBetween(1, 100); 
 
   const productRes = http.get(`${BASE_URL}/api/products/${productId}`);
 
   check(productRes, {
     "product detail fetched": (r) =>
-      r.status === 200 || r.status === 404, // 404 masih valid
+      r.status === 200 || r.status === 404, 
   });
 
-  // 🔥 3. GET CATEGORIES
   const categoriesRes = http.get(`${BASE_URL}/api/categories`);
 
   check(categoriesRes, {
     "categories fetched": (r) => r.status === 200,
   });
+}
+
+export function teardown(data) {
+  const endTime = new Date().toISOString();
+  console.log(`TEST END: ${endTime}`);
+
+  if (data && data.startTime) {
+    const duration =
+      new Date(endTime).getTime() - new Date(data.startTime).getTime();
+
+    console.log(`TOTAL DURATION: ${(duration / 1000).toFixed(2)} seconds`);
+  }
 }
