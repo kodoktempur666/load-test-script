@@ -2,6 +2,8 @@ import http from "k6/http";
 import { check } from "k6";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
+
+
 const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
@@ -17,16 +19,16 @@ export const options = {
   scenarios: {
     cart_activity: {
       executor: "ramping-arrival-rate",
-      startRate: 50,
+      startRate: 5,
       timeUnit: "1s",
       preAllocatedVUs: 200,
       maxVUs: 1000,
       stages: [
-        { target: 100, duration: "10s" },
-        { target: 300, duration: "10s" },
-        { target: 700, duration: "15s" },
-        { target: 1000, duration: "15s" },
-        { target: 0, duration: "10s" },
+        { target: 10, duration: "10s" },   
+        { target: 30, duration: "10s" },  
+        { target: 70, duration: "15s" },   
+        { target: 100, duration: "15s" },  
+        { target: 0, duration: "10s" },  
       ],
     },
   },
@@ -36,40 +38,17 @@ export const options = {
   },
 };
 
-function userData() {
-  const id = randomIntBetween(1, 300);
-  return {
-    email: `user${id}@test.com`,
-    password: "123456",
-  };
-}
 
 
 export default function () {
-  const user = userData();
-
-  const loginRes = http.post(
-    `${BASE_URL}/api/login`,
-    JSON.stringify({
-      email: user.email,
-      password: user.password,
-    }),
-    { headers: { "Content-Type": "application/json" } }
-  );
-
-  check(loginRes, {
-    "login success": (r) => r.status === 200,
-  });
-
-  const token = loginRes.json("data.token");
-
-  const authHeaders = {
+  
+  const headers = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
   };
 
   const cartRes = http.post(`${BASE_URL}/api/carts`, null, {
-    headers: authHeaders,
+    headers,
+    tags: { name: "create_cart" },
   });
 
   check(cartRes, {
@@ -84,7 +63,8 @@ export default function () {
       productId: 1,
       quantity: 1,
     }),
-    { headers: authHeaders }
+    { headers, tags: { name: "add_cart_item" } }
+
   );
 
   check(addItemRes, {
@@ -98,7 +78,7 @@ export default function () {
     JSON.stringify({
       quantity: 2,
     }),
-    { headers: authHeaders }
+    { headers, tags: { name: "update_cart_item" } }
   );
 
   check(updateRes, {
@@ -106,7 +86,7 @@ export default function () {
   });
 
   const getCartRes = http.get(`${BASE_URL}/api/carts/${cartId}`, {
-    headers: authHeaders,
+    headers, tags: { name: "get_cart" }
   });
 
   check(getCartRes, {

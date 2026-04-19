@@ -17,17 +17,18 @@ export const options = {
     auth_spike: {
       executor: "ramping-arrival-rate",
 
-      startRate: 50, 
+      startRate: 5, 
       timeUnit: "1s",
 
       preAllocatedVUs: 200,
       maxVUs: 1000,
 
       stages: [
-        { target: 100, duration: "15s" },
-        { target: 200, duration: "15s" },
-        { target: 500, duration: "15s" }, 
-        { target: 0, duration: "15s" },
+        { target: 10, duration: "10s" },   
+        { target: 30, duration: "10s" },  
+        { target: 70, duration: "15s" },   
+        { target: 100, duration: "15s" },  
+        { target: 0, duration: "10s" },  
       ],
     },
   },
@@ -35,8 +36,8 @@ export const options = {
 
 
 function randomUser() {
-  // const uniqueId = `${__VU}-${__ITER}-${Date.now()}`;
-  const uniqueId = `${__VU}-${__ITER}}`;
+  const uniqueId = `${__VU}-${__ITER}-${Date.now()}`;
+  // const uniqueId = `${__VU}-${__ITER}}`;
 
   return {
     email: `user${uniqueId}@test.com`,

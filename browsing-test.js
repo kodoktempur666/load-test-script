@@ -19,17 +19,17 @@ export const options = {
     browsing_load: {
       executor: "ramping-arrival-rate",
 
-      startRate: 100,
+      startRate: 5,
       timeUnit: "1s",
 
       preAllocatedVUs: 300,
       maxVUs: 2000,
 
       stages: [
-        { target: 300, duration: "10s" },   
-        { target: 800, duration: "15s" },  
-        { target: 1500, duration: "20s" },  
-        { target: 2500, duration: "20s" }, 
+        { target: 10, duration: "10s" },   
+        { target: 30, duration: "10s" },  
+        { target: 70, duration: "15s" },   
+        { target: 100, duration: "15s" },  
         { target: 0, duration: "10s" },     
       ],
     },
