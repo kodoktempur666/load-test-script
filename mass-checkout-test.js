@@ -5,6 +5,15 @@ const HOST = __ENV.HOST || "18.139.14.134";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
+
+
+export function setup() {
+  const startTime = new Date().toISOString();
+  console.log(`TEST START: ${startTime}`);
+  return { startTime };
+}
+
+
 export const options = {
   scenarios: {
     checkout_spike: {
@@ -72,4 +81,17 @@ export default function () {
     "checkout accepted": (r) =>
       r.status === 202 || r.status === 200,
   });
+}
+
+
+export function teardown(data) {
+  const endTime = new Date().toISOString();
+  console.log(`TEST END: ${endTime}`);
+
+  if (data && data.startTime) {
+    const duration =
+      new Date(endTime).getTime() - new Date(data.startTime).getTime();
+
+    console.log(`TOTAL DURATION: ${(duration / 1000).toFixed(2)} seconds`);
+  }
 }
