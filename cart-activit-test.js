@@ -19,16 +19,16 @@ export const options = {
   scenarios: {
     cart_activity: {
       executor: "ramping-arrival-rate",
-      startRate: 5,
+      startRate: 10,
       timeUnit: "1s",
       preAllocatedVUs: 200,
-      maxVUs: 1000,
+      maxVUs: 1200,
+
       stages: [
-        { target: 10, duration: "10s" },   
-        { target: 30, duration: "10s" },  
-        { target: 70, duration: "15s" },   
-        { target: 100, duration: "15s" },  
-        { target: 0, duration: "10s" },  
+        { target: 100, duration: "30s" },
+        { target: 300, duration: "30s" },
+        { target: 600, duration: "30s" },
+        { target: 0, duration: "30s" },
       ],
     },
   },
