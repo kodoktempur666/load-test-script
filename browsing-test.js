@@ -8,11 +8,16 @@ const BASE_URL = `http://${HOST}:${PORT}`;
 
 
 export function setup() {
-  const startTime = new Date().toISOString();
-  console.log(`TEST START: ${startTime}`);
-  return { startTime };
-}
+  const now = new Date();
 
+  const startTimeISO = now.toISOString();
+  const startTimeUnix = Math.floor(now.getTime() / 1000);
+
+  console.log(`TEST START (ISO): ${startTimeISO}`);
+  console.log(`TEST START (UNIX): ${startTimeUnix}`);
+
+  return { startTimeISO, startTimeUnix };
+}
 
 export const options = {
   scenarios: {
@@ -64,13 +69,23 @@ export default function () {
 }
 
 export function teardown(data) {
-  const endTime = new Date().toISOString();
-  console.log(`TEST END: ${endTime}`);
+  const now = new Date();
 
-  if (data && data.startTime) {
+  const endTimeISO = now.toISOString();
+  const endTimeUnix = Math.floor(now.getTime() / 1000);
+
+  console.log(`TEST END (ISO): ${endTimeISO}`);
+  console.log(`TEST END (UNIX): ${endTimeUnix}`);
+
+  if (data && data.startTimeISO) {
     const duration =
-      new Date(endTime).getTime() - new Date(data.startTime).getTime();
+      new Date(endTimeISO).getTime() - new Date(data.startTimeISO).getTime();
 
     console.log(`TOTAL DURATION: ${(duration / 1000).toFixed(2)} seconds`);
+  }
+
+  if (data && data.startTimeUnix) {
+    const durationUnix = endTimeUnix - data.startTimeUnix;
+    console.log(`TOTAL DURATION (UNIX): ${durationUnix} seconds`);
   }
 }
