@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check, sleep  } from "k6";
 
-const HOST = __ENV.HOST || "18.139.14.134";
+const HOST = __ENV.HOST || "18.143.125.237";
 const PORT = __ENV.PORT || "3000";
 
 const BASE_URL = `http://${HOST}:${PORT}`;

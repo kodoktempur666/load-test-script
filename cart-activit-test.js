@@ -4,7 +4,7 @@ import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
 
 
-const HOST = __ENV.HOST || "18.139.14.134";
+const HOST = __ENV.HOST || "18.143.125.237";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
