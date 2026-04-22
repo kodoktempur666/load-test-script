@@ -64,7 +64,7 @@ export default function () {
   http.post(
     `${BASE_URL}/api/carts/${cartId}/items`,
     JSON.stringify({
-      productId: 1,
+      productId: 10,
       quantity: 1,
     }),
     {
@@ -75,7 +75,7 @@ export default function () {
 
   const checkoutRes = http.post(
     `${BASE_URL}/api/carts/${cartId}/checkout`,
-    null,
+    JSON.stringify({}), 
     {
       headers,
       tags: { name: "checkout" }
