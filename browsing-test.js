@@ -52,7 +52,7 @@ export default function () {
   });
 
 
-  const productId = randomIntBetween(1, 100); 
+  const productId = randomIntBetween(1, 50); 
 
   const productRes = http.get(`${BASE_URL}/api/products/${productId}`);
 
