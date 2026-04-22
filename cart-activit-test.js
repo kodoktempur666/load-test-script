@@ -27,10 +27,8 @@ export const options = {
       maxVUs: 1200,
 
       stages: [
-        { target: 30, duration: "30s" },
-        { target: 40, duration: "30s" },
-        { target: 50, duration: "30s" },
-        { target: 0, duration: "30s" },
+        { target: 100, duration: "30s" },
+        { target: 120, duration: "30s" },
       ],
     },
   },
@@ -45,12 +43,12 @@ export default function () {
     "Content-Type": "application/json",
   };
 
-  const cartRes = http.post(`${BASE_URL}/api/carts`, null, {
+  const cartRes = http.post(`${BASE_URL}/api/carts`, JSON.stringify({}), {
     headers,
     tags: { name: "create_cart" },
   });
 
-  if (!cartRes || cartRes.status !== 201) {
+  if (!cartRes || cartRes.status !== 201 ) {
     console.error("Failed create cart", cartRes.status);
     return;
   }
