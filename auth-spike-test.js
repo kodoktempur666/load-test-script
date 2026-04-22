@@ -28,19 +28,22 @@ export const options = {
       maxVUs: 1200,
 
       stages: [
-        { target: 100, duration: "30s" },
-        { target: 300, duration: "30s" },
-        { target: 600, duration: "30s" },
+        { target: 150, duration: "30s" },
+        { target: 250, duration: "30s" },
+        { target: 350, duration: "30s" },
         { target: 0, duration: "30s" },
       ],
     },
+  },
+  thresholds: {
+    http_req_failed: ["rate<0.02"],
+    http_req_duration: ["p(50)<1000", "p(75)<1000", "p(90)<1000"],
   },
 };
 
 
 function randomUser() {
   const uniqueId = `${__VU}-${__ITER}-${Date.now()}`;
-  // const uniqueId = `${__VU}-${__ITER}}`;
 
   return {
     email: `user${uniqueId}@test.com`,
@@ -84,6 +87,7 @@ export default function () {
   sleep(0.5); 
 
 }
+
 
 export function teardown(data) {
   const now = new Date();
