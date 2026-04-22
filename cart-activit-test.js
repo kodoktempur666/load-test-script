@@ -2,12 +2,9 @@ import http from "k6/http";
 import { check } from "k6";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
-
-
 const HOST = __ENV.HOST || "18.143.125.237";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
-
 
 export function setup() {
   const now = new Date();
@@ -30,10 +27,9 @@ export const options = {
       maxVUs: 1200,
 
       stages: [
+        { target: 50, duration: "30s" },
         { target: 100, duration: "30s" },
-        { target: 200, duration: "30s" },
-        { target: 300, duration: "30s" },
-        { target: 0, duration: "30s" },
+        { target: 150, duration: "30s" },
       ],
     },
   },
@@ -43,10 +39,7 @@ export const options = {
   },
 };
 
-
-
 export default function () {
-  
   const headers = {
     "Content-Type": "application/json",
   };
@@ -68,8 +61,7 @@ export default function () {
       productId: 1,
       quantity: 1,
     }),
-    { headers, tags: { name: "add_cart_item" } }
-
+    { headers, tags: { name: "add_cart_item" } },
   );
 
   check(addItemRes, {
@@ -83,7 +75,7 @@ export default function () {
     JSON.stringify({
       quantity: 2,
     }),
-    { headers, tags: { name: "update_cart_item" } }
+    { headers, tags: { name: "update_cart_item" } },
   );
 
   check(updateRes, {
@@ -91,7 +83,8 @@ export default function () {
   });
 
   const getCartRes = http.get(`${BASE_URL}/api/carts/${cartId}`, {
-    headers, tags: { name: "get_cart" }
+    headers,
+    tags: { name: "get_cart" },
   });
 
   check(getCartRes, {
