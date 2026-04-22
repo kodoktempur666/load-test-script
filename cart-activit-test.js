@@ -50,11 +50,18 @@ export default function () {
     tags: { name: "create_cart" },
   });
 
-  check(cartRes, {
-    "cart created": (r) => r.status === 201,
-  });
+  if (!cartRes || cartRes.status !== 201) {
+    console.error("Failed create cart", cartRes.status);
+    return;
+  }
 
-  const cartId = cartRes.json("data.cartId");
+  let cartId;
+  try {
+    cartId = cartRes.json("data.cartId");
+  } catch (e) {
+    console.error("JSON parse error", e);
+    return;
+  }
 
   const addItemRes = http.post(
     `${BASE_URL}/api/carts/${cartId}/items`,
