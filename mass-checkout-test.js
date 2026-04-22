@@ -51,7 +51,7 @@ export default function () {
 
   const cartRes = http.post(
     `${BASE_URL}/api/carts`,
-    null,
+    JSON.stringify({}), 
     {
       headers,
       tags: { name: "create_cart" }
