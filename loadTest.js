@@ -16,7 +16,7 @@ export const options = {
     dynamic_rps_test: {
       executor: "ramping-arrival-rate",
 
-      startRate: 100, 
+      startRate: 10, 
       timeUnit: "1s",
 
       preAllocatedVUs: 200,
