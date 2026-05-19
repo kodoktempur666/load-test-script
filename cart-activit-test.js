@@ -6,17 +6,31 @@ const HOST = __ENV.HOST || "18.143.125.237";
 const PORT = __ENV.PORT || "3000";
 const BASE_URL = `http://${HOST}:${PORT}`;
 
+function formatWIB(date) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
 export function setup() {
   const now = new Date();
 
-  const startTimeISO = now.toISOString();
+  const startTimeWIB = formatWIB(now);
   const startTimeUnix = Math.floor(now.getTime() / 1000);
 
-  console.log(`TEST START (ISO): ${startTimeISO}`);
+  console.log(`TEST START (WIB): ${startTimeWIB}`);
   console.log(`TEST START (UNIX): ${startTimeUnix}`);
 
-  return { startTimeISO, startTimeUnix };
+  return { startTimeWIB, startTimeUnix };
 }
+
 export const options = {
   scenarios: {
     cart_activity: {
@@ -103,21 +117,15 @@ export default function () {
 export function teardown(data) {
   const now = new Date();
 
-  const endTimeISO = now.toISOString();
+  const endTimeWIB = formatWIB(now);
   const endTimeUnix = Math.floor(now.getTime() / 1000);
 
-  console.log(`TEST END (ISO): ${endTimeISO}`);
+  console.log(`TEST END (WIB): ${endTimeWIB}`);
   console.log(`TEST END (UNIX): ${endTimeUnix}`);
-
-  if (data && data.startTimeISO) {
-    const duration =
-      new Date(endTimeISO).getTime() - new Date(data.startTimeISO).getTime();
-
-    console.log(`TOTAL DURATION: ${(duration / 1000).toFixed(2)} seconds`);
-  }
 
   if (data && data.startTimeUnix) {
     const durationUnix = endTimeUnix - data.startTimeUnix;
-    console.log(`TOTAL DURATION (UNIX): ${durationUnix} seconds`);
+
+    console.log(`TOTAL DURATION: ${durationUnix} seconds`);
   }
 }
